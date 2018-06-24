@@ -50,3 +50,25 @@
   * _Um cluster é formado por uma região densa de dados, separada de outras regiões de alta densidade por regiões de baixa densidade._
 * **Cluster Basedado em Similaridade**
   * _Um cluster é formado por dados similares e clusters diferentes não são similares._
+* Critérios de Agrupamento
+ * Compactação
+   * Baixa variação intercluster
+   * Bom desempenho para grupos esféricos
+   * Pouco efetivo para estruturas complexas
+ * Encadeamento (Ligação)
+   * Objetos vizinhos tendem a pertencer a um mesmo grupo
+   * Bom desempenho para grupos com o formato abitrário
+ * Separação Espacial
+   * Distância intercluster
+   * Soluções triviais
+* Separaçãi de Grupos
+  * Excluisivo (hard)
+  * Não exclusivo (soft - Fluzzy e Probabilístico)
+* Medidadas de similaridade
+  * Similaridade
+  * Medidas / Métricas de distância
+* Principais Métodos
+  * Particional
+  * Hierárquico
+  * Baseado em densidade
+  * Baseado em Grid
