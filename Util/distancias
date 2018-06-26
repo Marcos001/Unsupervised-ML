@@ -1,0 +1,12 @@
+
+def distancia_euclidiana(vetor1, vetor2): # distância euclidiana
+    dist = 0
+    for i in range(len(vetor1)):
+        dist += (vetor1[i] - vetor2[i])**2
+    return (dist)
+
+def disntancia_manhattan(vetor1, vetor2):
+    dist = 0
+    for i in range(len(vetor1)):
+        dist += abs(vetor1[i] - vetor2[i])
+    return (dist)
