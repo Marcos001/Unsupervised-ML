@@ -1,0 +1,25 @@
+---
+title: "Roteiro de Estudo do Marcos"
+author: "Marcos Vinícius"
+date: "30 de junho de 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Machine Learning with **R**
+### Introdução 
+
+<ul>
+<li>Conceitos Basicos na prática de R</li>
+<li>Rodando na base _banco.ufba_ </li>
+</ul>
+
+### Testar os algoritmos estudados em notebook com a base Íris.
+
+[Comando e sixtaxe: R Notebook](https://bookdown.org/yihui/rmarkdown/notebook.html)
+
+[kmeans clustering](https://uc-r.github.io/kmeans_clustering)

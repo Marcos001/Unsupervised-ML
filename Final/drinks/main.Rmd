@@ -1,0 +1,244 @@
+---
+title: "Agrupamento com K-means"
+author: "Marcos Vinícius dos Santos Ferreira"
+date: '2018-04-16'
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+******
+# Introdução
+******
+
+k-means é um algoritmo de aprendizado de máquina não supervisionado usado para encontrar grupos de observações (clusters) que compartilham _características semelhantes_. Qual é o significado da aprendizagem não supervisionada? Isso significa que as observações dadas no conjunto de dados não são rotuladas, não há resultado a ser previsto.
+
+Para o experimento, o desafio é usar o conjunto de  dados de bebidas para prever onde as pessoas bebem mais cerveja, vinho e bebidas espirituosas?
+
+******
+# Carregamento dos dados
+******
+
+```{r message=FALSE}
+# lendo o dataset
+data.drinks = read.csv('../../data/alcohol-consumption/drinks.csv')
+
+# Visualizando as 6 primeiras linhas dataset
+head(data.drinks)
+```
+******
+# Análise dos dados
+******
+
+Primeiro temos que explorar e visualizar os dados.
+
+```{r}
+# estrutura do dataset drinks.
+str(data.drinks)
+```
+
+Todas as colunas são expressas como numéricas ou inteiras. E quanto à distribuição estatística?
+
+```{r}
+summary(data.drinks)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+
+#load library
+library(tidyverse)
+library(corrplot)
+library(gridExtra)
+library(GGally)
+
+# Histograma de cada atributo
+
+data.features = data.drinks[,2:5]
+
+data.features %>%
+  gather(Attributes, value, 1:4) %>%
+  ggplot(aes(x=value)) +
+  geom_histogram(fill="lightblue2", colour="black") +
+  facet_wrap(~Attributes, scales="free_x") +
+  labs(x="Values", y="Frequency") 
+```
+
+Qual é a relação entre os diferentes atributos? Podemos usar a função **corrplot()** para criar uma exibição gráfica de uma matriz de correlação.
+
+```{r message=FALSE, warning=FALSE}
+# Matrix de correlação
+corrplot(cor(data.features), type="upper", method="ellipse", tl.cex=0.9)
+```
+
+Existe uma forte correlação linear entre os _beer-services_ e os _total-litres-of-pure-alcool_. Podemos modelar a relação entre essas duas variáveis ajustando uma equação linear.
+
+
+```{r message=FALSE, warning=FALSE}
+# Relationship between beer-services e total-litres-of-pure-alcool.
+ggplot(data.features, aes(x=beer_servings, y=total_litres_of_pure_alcohol)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE)
+```
+
+Agora que fizemos uma análise de dados exploratória, podemos preparar os dados para executar o algoritmo k-means. 
+
+******
+# Preparação dos dados
+******
+
+Temos que normalizar as variáveis para expressá-las no mesmo intervalo de valores. Em outras palavras, normalização significa ajustar os valores medidos em diferentes escalas para uma escala comum.
+
+```{r message=FALSE, warning=FALSE}
+# Normalização
+drinks.features.norm <- as.data.frame(scale(data.features))
+
+# dados originais
+d1 <- ggplot(data.features, aes(x=beer_servings, y=total_litres_of_pure_alcohol)) +
+  geom_point() +
+  labs(title="Dados originais")
+
+# dados normalizados
+d2 <- ggplot(drinks.features.norm, aes(x=beer_servings, y=total_litres_of_pure_alcohol)) +
+  geom_point() +
+  labs(title="Dados normalizados")
+
+# subplot
+grid.arrange(d1,d2, ncol=2)
+```
+
+Os pontos nos dados normalizados são os mesmos que os originais. A única coisa  que muda é a escala do eixo.
+
+******
+# Execução do k-means
+******
+
+Nesta seção, vamos executar o algoritmo k-means e analisar os principais componentes retornados pela função.
+
+```{r}
+# Execução do K-means com k  = 2
+set.seed(1234)
+drinks.k2 <- kmeans(drinks.features.norm, centers=2)
+```
+
+A função kmeans() rertorna um objeto da classe “kmeans” com informações sobre a partição:
+  * cluster. um vetor de inteiros indicando o custer ao qual cada ponto é alocado. 
+  * centers. a matriz com o centro dos clusters
+  * size . o número de pontos em cada cluster.
+
+```{r}
+# cluster para cada ponto é alocado
+drinks.k2$cluster
+```
+
+```{r}
+# centro dos clusters
+drinks.k2$centers
+```
+
+```{r}
+# tamanho dos cluster
+drinks.k2$size
+```
+
+Além disso, a função kmeans () retorna algumas proporções que nos informam quão compacto é um cluster e quão diferentes são os vários clusters entre si.
+
+  * betweenss - A soma entre os quadrados dos aglomerados. Em uma segmentação ideal, espera-se que essa proporção seja a mais alta possível, já que gostaríamos de ter clusters heterogêneos.
+  * withinss - Vetor da soma de quadrados dentro do cluster, um componente por cluster. Em uma segmentação ideal, espera-se que essa proporção seja a mais baixa possível para cada cluster, uma vez que gostaríamos de ter homogeneidade dentro dos clusters.
+  * tot.withinss - Soma total de quadrados dentro do cluster.
+  * totss - A soma total de quadrados.
+
+```{r}
+# Soma entre os quadrados
+drinks.k2$betweenss
+```
+```{r}
+# Soma dos quadrados dentro do cluster
+drinks.k2$withinss
+```
+
+```{r}
+# Soma total de quadrados dentro do cluster
+drinks.k2$tot.withinss
+```
+
+```{r}
+# Soma total dos quaddrados
+drinks.k2$totss
+```
+
+******
+# Quantos Clustes ?
+******
+
+Para estudar graficamente qual valor de k nos dá a melhor partição, podemos traçar entre e tot.withinss vs Choice de k.
+
+```{r message=FALSE, warning=FALSE}
+bss <- numeric()
+wss <- numeric()
+
+# rodar o algoritmo com diferentes valores de K
+set.seed(1234)
+
+for(i in 1:10){
+  
+  # para casa k, calcula betweenss e tot.withinss
+  bss[i] <- kmeans(drinks.features.norm, centers=i)$betweenss
+  wss[i] <- kmeans(drinks.features.norm, centers=i)$tot.withinss
+}
+
+# Soma entre os quadrados dos quadrados vs Escolha de k
+
+d3 <- qplot(1:10, bss, geom=c("point", "line"), 
+            xlab="Number of clusters", ylab="Between-cluster sum of squares") +
+  scale_x_continuous(breaks=seq(0, 10, 1))
+
+# Soma total de quadrados dentro do cluster vs Escolha de k
+
+d4 <- qplot(1:10, wss, geom=c("point", "line"),
+            xlab="Number of clusters", ylab="Total within-cluster sum of squares") +
+  scale_x_continuous(breaks=seq(0, 10, 1))
+
+# subplot
+grid.arrange(d3, d4, ncol=2)
+```
+
+Qual é o valor ideal para k? Deve-se escolher um número de clusters para que adicionar outro cluster não forneça uma partição muito melhor dos dados. Em algum momento, o ganho cairá, dando um ângulo no gráfico (critério do cotovelo). O número de clusters é escolhido neste momento. No nosso caso, é claro que 3 é o valor apropriado para k.
+
+******
+# Resultados
+******
+
+```{r}
+# Execução do k-means com k = 3
+drinks.k3 <- kmeans(drinks.features.norm, centers = 3)
+
+# Valores médios de cada cluster
+aggregate(data.drinks, by=list(drinks.k3$cluster), mean)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+# Clustering 
+ggpairs(cbind(data.features, Cluster=as.factor(drinks.k3$cluster)),
+        columns=1:4, aes(colour=Cluster, alpha=0.5),
+        lower=list(continuous="points"),
+        upper=list(continuous="blank"),
+        axisLabels="none", switch="both")
+```
+
+******
+# Conclusão
+******
+
+Nesta entrada, aprendemos sobre o algoritmo k-means, incluindo a normalização dos dados antes de executá-lo, a escolha do número ideal de clusters (critério de cotovelo) e a visualização do clustering.
+
+
+******
+# Referências
+******
+
+[BASE](https://www.kaggle.com/xvivancos/clustering-wines-with-k-means/notebook)

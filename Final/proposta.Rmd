@@ -1,0 +1,52 @@
+---
+title: "Proposta"
+author: "Marcos Vinícius"
+date: "3 de julho de 2018"
+output: html_document
+---
+
+## Propostas
+ 1. Onde as pessoas bebem mais cerveja, vinho e bebidas espirituosas?
+```{r}
+# lendo o dataset
+dataset.bebida = read.csv('../data/alcohol-consumption/drinks.csv')
+
+# Visualizando o dataset
+head(dataset.bebida)
+
+# dados com muitos valores zerados
+```
+
+2. O que o mundo pensa do Trump ?
+```{r}
+# lendo o dataset
+dataset.trump = read.csv('../data/trump-world-trust/TRUMPWORLD-issue-1.csv')
+
+# Visualizando o dataset
+head(dataset.trump)
+```
+
+
+3. Diabetes - Quais características descatam avanços na amenização ou agravamento do diabetes ? Quantos Níveis da doença das pessoas que procuram o hospital ?
+
+```{r}
+# lendo o dataset
+dataset.diabetes = read.csv('../data/dataset_diabetes/diabetic_data.csv')
+
+# Visualizando o dataset
+head(dataset.diabetes)
+```
+
+  * Estes dados foram preparados para analisar os fatores relacionados à readmissão, bem como outros resultados referentes aos pacientes com diabetes.
+  
+```{r}
+# estrutura do dataset
+str(dataset.diabetes)
+```
+
+
+### Referências
+  * [Trump World Trust](https://github.com/fivethirtyeight/data/tree/master/trump-world-trust)
+  * [Alcohol Consumption](https://github.com/fivethirtyeight/data/tree/master/alcohol-consumption)
+  * [Site de Datasets](https://data.fivethirtyeight.com/)
+ 

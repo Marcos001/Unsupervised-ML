@@ -1,0 +1,181 @@
+---
+title: "Clustering - Kmeans"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+## Método Particional e Realocação
+
+Ao contrário dos tradicionais _métodos hierárquicos_, em que os grupos não são revisitados depois de terem sidos construídos, os algortimos de realocação  melhoraram gradualmente os grupos, resultando em clusters de melhor qualidade.
+
+Basicamente, os algoritmos de particionamento e realocação, dividem os dados em vários subgrupos. Entretanto, a verificação de todos os possíveis subgrupos é computacionalmente inviável. Deste modo, foram desenvolvidas diferentes Heuríticas que executam a realocação de forma iterativa, re-atribuindo as observações entre os grupos. 
+
+### Algoritmos K-means
+
+Entre os algoritmos de agrupamento do tipo partição, o algoritmo _k-means_ é
+destacadamente o mais importante. O algoritmo _k-means_ é amplamente utilizado nas mais diversas aplicações. Na área de mineração de dados, por exemplo, entre inúmeros algoritmos, foi classificado como o segundo mais importante em data mining. O algoritmo _k-means_ trata do problema de agrupamento segundo o critério de mínima soma de quadrados.
+
+O algoritmo k-means é um método iterativo simples para particionar um conjunto de dados em um número de grupos especificado pelo usuário. Basicamente o algoritmo, em suas diversas formas, possui a seguinte estrutura de passos.
+
+  1. Seleção de **k** pontos para sementes iniciais dos centróides dos *k* grupos.
+  2. Cada observação é associada a um cluster, para o qual a dissimilaridade entre o objeto e o centro do cluster é menor que as demais.
+  3. Os centros dos clusters são recalculados, redefinindo cada um em função da média de todas as observações atríbuídas ao grupo.
+  4. retorna ao passo 2 até que os centros dos clusters se estabilizem.
+
+#### Distância euclidiana
+```{r}
+euclidean.distance<-function(x, y){
+	resp<-sum((x-y)^2)
+	resp
+}
+```
+#### K mais próximo.
+```{r}
+closest.k<-function(data, centroids){
+	euclidean.dist<-c()
+	for(i in 1:nrow(centroids)){
+		euclidean.dist[i]<-euclidean.distance(data, centroids[i,])
+	}
+
+	which.min(euclidean.dist)
+}
+```
+#### Funçao para execução do kmeans
+```{r}
+k.means<-function(dataset, k=2){
+  # cria uma lista para receber a resposta
+	resp<-list()
+	cat("Inicializando centroides...\n");
+	index<-sample(1:nrow(dataset), k)
+	# aplica os centrois no datset
+	centroids<-dataset[index, ]
+  
+	# 
+	clustering<-rep(0,nrow(dataset))
+	stop.crit<-matrix(0, nrow=nrow(centroids), ncol=ncol(centroids))
+
+	while(euclidean.distance(stop.crit, centroids) > 0){
+
+		#organiza os objetos em clusters iniciais
+		cat("Centroides escolhidos:\n")
+		for(i in 1:k){
+			cat("[",i,"] = ", as.double(centroids[i,]), "\n")
+		}
+
+		for(i in 1:nrow(dataset)){
+			clustering[i]<-closest.k(dataset[i,], centroids)
+		}
+		stop.crit<-centroids
+
+		resp$data<-dataset
+		resp$centroids<-centroids
+		resp$clustering<-clustering
+
+		#atualiza centroide...
+		for(i in 1:nrow(centroids)){
+			centroids[i,]<-colMeans(dataset[which(clustering == i),])
+		}
+	}
+	resp
+}
+```
+Plotar Kmeans
+```{r}
+plot.kmeans<-function(resp){
+	plot(resp$data)
+	for(i in sort(unique(resp$clustering))){
+		points(resp$data[which(resp$clustering==i),], col=(i+1), pch=19)
+		points(resp$centroids[i,], pch=8, col=(i+1))
+	}
+}
+```
+Após declarar as funções, importamos a base para realização do agrupamento.
+```{r}
+# read the dataset
+iris <- read.csv('../data/Iris.csv')
+
+# pegando somente as features do meu conjunto de dados, variável contínua
+iris.features <- iris[,2:5]
+
+iris.features
+
+# obtem os centroides do meu cluster com o agrupamento kmeans
+cluster.kmeans <- k.means(iris.features, 3)
+```
+```{r}
+# cluster.means -> $data - $centroids - $clustering
+print('classificação de cada atributo')
+cluster.kmeans$clustering
+```
+
+```{r}
+# centroides dos minhas 3 classes de atributos
+cluster.kmeans$centroids
+```
+
+## visulizando os primeiros resultados
+```{r}
+# visualizando 
+plot.kmeans(cluster.kmeans)
+```
+
+
+### kmeans Interativo
+```{r}
+k.means.interativo<-function(dataset, k=2, sleep.time=1){
+	resp<-list()
+	cat("Inicializando centroides...\n");
+	Sys.sleep(sleep.time)
+	index<-sample(1:nrow(dataset), k)
+	centroids<-dataset[index, ]
+
+	clustering<-rep(0,nrow(dataset))
+	stop.crit<-matrix(0, nrow=nrow(centroids), ncol=ncol(centroids))
+
+	while(euclidean.distance(stop.crit, centroids) > 0){
+
+		#organiza os objetos em clusters iniciais
+		cat("Centroides escolhidos:\n")
+		for(i in 1:k){
+			cat("[",i,"] = ", as.double(centroids[i,]), "\n")
+		}
+
+		for(i in 1:nrow(dataset)){
+			clustering[i]<-closest.k(dataset[i,], centroids)
+		}
+		stop.crit<-centroids
+
+		resp$data<-dataset
+		resp$centroids<-centroids
+		resp$clustering<-clustering
+
+		plot.kmeans(resp)
+		Sys.sleep(sleep.time)
+
+		#atualiza centroide...
+		for(i in 1:nrow(centroids)){
+			centroids[i,]<-colMeans(dataset[which(clustering == i),])
+		}
+	}
+	resp
+}
+
+```
+### visualizado com o clusplot com todos as 4 variáveis do grupo
+```{r}
+library("cluster")
+clusplot(cluster.kmeans$data, cluster.kmeans$clustering, color = TRUE, shade= TRUE, labels = 3, lines = 0)
+```
+### imprimindo todo o dataset com as variáveis separadas
+```{r}
+with(iris, pairs(cluster.kmeans$data, col=c(1:3)[cluster.kmeans$clustering]))
+```
+
+### Kmeans interativo
+```{r}
+# 
+c.k.means <- k.means.interativo(iris.features, 3)
+```
+

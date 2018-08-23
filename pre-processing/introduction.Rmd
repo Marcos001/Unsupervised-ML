@@ -1,0 +1,140 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+### Pŕe-processamento em R com a base de dados _bancoufba.csv_ 
+
+### Agenda
+  * Introdução
+  * Limpesa
+  * Exploração
+  * Transformação
+  * Redução de Dimensionalidade
+
+```{r}
+# lendo a base de dados 
+banco = read.csv('../data/bancoufba.csv')
+
+# listando o nome dos atributos
+names(banco)
+```
+```{r}
+# visualizando alguns atributos
+head(banco)
+```
+```{r}
+# verificando os níveis de um determinado atributo
+levels(banco$sexo)
+```
+```{r}
+levels(banco$estado)
+```
+```{r}
+# média -  no exemplo todos os pesos das instâncias
+mean(banco$peso)
+```
+```{r}
+# mediana
+median(banco$peso)
+```
+
+```{r}
+# mínino e maximo
+min(banco$peso)
+max(banco$peso)
+```
+```{r}
+# Moda - o valor mais frequente nas minhas instâncias - rever isso.
+sort(table(banco$estado), decreasing = T)[1]
+```
+```{r}
+# Resumo dos Dados no atributo Salário
+summary(banco$salario)
+```
+```{r}
+# Resumo dos dados em toda a base 
+summary(banco)
+```
+```{r}
+# calculando a variãnça - dado peso é atributo Racional 
+var(banco$peso)
+```
+```{r}
+# calculando o desvio padrão - ate agora todas essas métricas estatísticas o R ja tem as funções
+sd(banco$peso)
+```
+# Visualização
+## Boxplot
+Para o pré processamento dos dados podemos visualiza-los os dados para compreender uma maior abstração e fazer melhores induções sobre os mesmo para então conferir se uma determinada hipótesi aplica aos dados. Nessa etapa de pré-processamento podemos utilizar o **Boxplot** para avaliar a distribuição empírica dos dados. O **Boxplot** é formado pelo primeiro, terceiro quartil e pela mediana.
+
+```{r}
+# boxplot so aceita valores numericos ? por usar quartis e medianas, pode ser que sim
+boxplot(banco$peso)
+```
+<p> As hastes inferiores e superiores se estendem, respectivamente, do quartil inferior até o menor valor não inferior ao limite inferior e do quartil superior até o maior valor não superior ao limite superior. Pontos foras desses limites são considerados valores discrepantes (**outliers**). Como exemplos temos: </p>
+```{r}
+boxplot(banco$salario)
+```
+<h2> Histograma </h2>
+<p>
+Distribuição de frequências é um agrupamento de dados em classes contabilizando o número de ocorrências em cada clases. O número de ocorrências de uma determinada classe recebe o nome de frequência absoluta. O _Objetivo_ é apresentar os dados de uma maneira mais concisa e que nos permita extrair informações sobre seu comportamento. </p>
+```{r}
+hist(banco$peso)
+```
+<h2>Transformando dados e Reduzindo a dimensionalidade</h2>
+<h3> Transformação </h3>
+<p>
+Várias técnicas de AM são limitadas ao tipo dos atributos: apenas valores numéricos ou apenas valores simbólicos. RNA e SVM são exemplos de técnicas que lidam apenas com dados numéricos. Pode-se fazer a conversão de valores como solução.
+</p>
+<h5>Conversão Simbólico-Numérico</h5>
+<ul>
+<li>Atributo nominal com dois valores que representam presença ou ausência de uma característica. Pode-se substituir por um dígito binário.</li>
+<li>Atributo nominal com dois valores que representam relação de ordem. Pode-se substituir por um dígito binário</li>
+</ul>
+
+```{r}
+# como exemplo o atributo sexo, que é nominal(simbólico), e queremos trabalhar com dados numéricos.
+levels(banco$sexo)
+```
+```{r}
+# procura as instância onde encontrar o atributo 'F'
+which(banco$sexo=="F")
+```
+```{r}
+# vetor que armazena os atributos do sexo
+temp<-as.vector(banco$sexo)
+
+# faz a tranformação de valores - 0 para M, 1 para F
+temp[which(temp=="M")] = "0"
+temp[which(temp=="F")] = "1"
+
+#atribui na minha base os atributos tranformados como inteiros
+banco$sexo <- as.integer(temp)
+
+# lista os novos valores dos atributos
+head(banco$sexo)
+```
+###Conversão Numérico-Simbólico
+   * Uma parcela dos algortimos de classificação e de associaçãi foram desenvolvidos para trabalhar com valores quantitativos. Atributo quantitativo do tipo discreto ou binário, com apenas dois valores. 
+     * Conversão Trivial: associar um nomea cada valor.
+
+   * Atributos quantitativos numéricos
+      * Discretização : transformação de valores numéricos em intervalos.
+      * Existem vários métodos de discretização, o mais simples é a média.
+
+###Tranformação dos atributos numéricos
+  * Transformar um valor numérico em outro valor numérico.
+  * Isso ocorre quando os limites inferior e superior de valores dos atributos são muito diferentes.
+  * Ou quando vários atributos estão em escalas diferentes.
+  * A transformação é necessária para evitar que um atributo predomine sobre outro. Pode se usar por exemplo a _normalização_ dos dados.
+
+###DATASETS
+  * [Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.html)
+  * [UCI KDD Archive](http://kdd.ics.uci.edu/summary.data.application.html)
+  * [Delve](http://www.cs.utoronto.ca/~delve/)

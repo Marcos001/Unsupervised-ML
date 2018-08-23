@@ -1,0 +1,23 @@
+---
+title: "Universidade Federal da Bahia"
+author: "Marcos Vinícius"
+date: "8 de julho de 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Pós-Graduação em Ciência da Computação
+# MATE32 - 2018.1 - Tópicos em Inteligência Computacional II
+
+# Integrantes
+  * Marcos Vinícius dos Santos Ferreira
+  
+# Título do Trabalho
+  * Agrupamento dos Níveis do Diabetes utilizando  _K-Means_
+
+# Base de Dados
+  * [Diabetes 130-US hospitals for years 1999-2008 Data Set ](https://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008)

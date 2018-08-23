@@ -1,0 +1,9 @@
+---
+title: "Algoritmo Baseado em Grid"
+author: "Marcos Vinícius"
+date: "3 de julho de 2018"
+output: html_document
+---
+
+1. Posso fazer consultas em sql
+2. A principal diferença com algoritmos baseados em densidade é porque em grid armazenamos estatísticas. metacélulas. 

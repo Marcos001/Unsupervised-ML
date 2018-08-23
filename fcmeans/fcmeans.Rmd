@@ -1,0 +1,80 @@
+---
+title: "Fluzzy c-means"
+output: html_notebook
+---
+
+Ao contrário do algoritmo K-means, no qual cada objeto de dados é o membro de apenas um cluster, um objeto de dados é o membro de todos os clusters com vários graus de membro difuso entre 0 e 1 no FCM. Portanto, os objetos de dados mais próximos dos centros de clusters têm graus de associação mais altos do que os objetos dispersos nas bordas dos clusters.
+
+
+### Código base
+```{r}
+# distância euclidiana
+euclidean.distance<-function(x, y){
+	sqrt(sum((x-y)^2))
+}
+
+# inicialização de membros
+init.members<-function(ncols=2, nrows=2){
+	members<-matrix(ncol=ncols, nrow=nrows)
+	for(i in 1:nrows){
+		end = 1
+		for(j in 1:(ncols-1)){
+			members[i,j]<-runif(n=1, min=0, max=end)
+			end = end-members[i,j]
+		}
+		members[i,ncols]<-end
+	}
+	members
+}
+
+# função fluzzy c-means
+fuzzy.cmeans<-function(ngroups=2, data, fuzzy.factor=2.5, threshold=0.01){
+	ndata<-nrow(data)
+	members<-init.members(ncol=ngroups, nrow=ndata)
+
+	centers<-list()
+
+	error=1
+
+	while(error > threshold){
+		#update center
+		for(i in 1:ngroups){
+			temp<-members[,i]^fuzzy.factor
+			centers[[i]]<-(colSums(temp*data))/sum(temp)
+		}
+
+		#update membership
+		new.members<-matrix(0,ncol=ngroups, nrow=ndata)
+		for(i in 1:ndata){
+			for(j in 1:ngroups){
+				#new.members[i,j]<-new.members[i,j]+(euclidean.distance(data[i,], centers[[i]])/euclidean.distance(data[i,], centers[[j]]))^(1/(m-1))
+				for(k in 1:ngroups){
+					new.members[i,j]<-new.members[i,j]+(euclidean.distance(data[i,], centers[[j]])/euclidean.distance(data[i,], centers[[k]]))^(1/(m-1))
+				}
+			}
+		}
+
+		new.members<-1/new.members
+
+		error = max(abs(new.members-members))
+		members = new.members
+	}
+	members
+}
+
+```
+### Preparação dos dados e chamada do cluster **fluzzy c-means**
+```{r}
+# read the dataset
+iris <- read.csv('../data/Iris.csv')
+
+# pegando somente as features do meu conjunto de dados, variável contínua
+iris.features <- iris[,2:5]
+
+# normalizar
+#iris.norm <- as.data.frame(apply(iris.features, 2, function(x) (x - min(x))/(max(x)-min(x))))
+
+# obtem os centroides do meu cluster com o agrupamento kmeans
+cluster.fc <- fuzzy.cmeans(data=iris.features)
+```
+

@@ -1,0 +1,115 @@
+---
+title: "Hclust-sl"
+output: html_notebook
+---
+
+# Algoritmo de Agrupamento Hierárquico
+
+
+Disntância Euclidiana Usada.
+```{r}
+euclidean.distance<-function(x, y){
+	resp<-sum((x-y)^2)
+	resp
+}
+```
+Disntância entre dois clusters?
+```{r}
+single.link<-function(clusterA, clusterB){
+	min.dist<-c()
+	for(i in 1:nrow(clusterA)){
+		for(j in 1:nrow(clusterB)){
+			min.dist<-c(min.dist, euclidean.distance(clusterA[i,], clusterB[j,]))
+		}
+	}
+	min(min.dist)
+}
+```
+vers cluster
+```{r}
+print.cluster<-function(cluster){
+	print(cluster)
+}
+```
+Ver partição
+```{r}
+print.partition<-function(partition){
+	for(i in 1:length(partition)){
+		cat("\n\n\t*****Cluster: ", i, " *****\n")
+		print.cluster(partition[[i]])
+	}
+}
+```
+Função clustering do hclust
+```{r}
+hclust.sl<-function(dataset){
+	clustering<-list()
+	cat("Starting clustering\n")
+	for(i in 1:nrow(dataset)){
+		clustering[[i]]<-dataset[i,]
+	}
+
+	cat("#clusters:", length(clustering), "\n")
+
+	print.partition(clustering)
+
+	while(length(clustering) > 1){
+		cat("\n----------Agglomerative step\n")
+		min.dist<-.Machine$integer.max
+		conc1<-1
+		conc2<-2
+		for(i in 1:(length(clustering)-1)){
+			for(j in (i+1):length(clustering)){
+				distance<-single.link(clustering[[i]], clustering[[j]])
+				if(distance<min.dist){
+					conc1<-i
+					conc2<-j
+					min.dist<-distance
+				}
+			}
+		}
+
+		cat("Concatenating clusters: [", conc1, ",", conc2, "]\n")
+		temp<-rbind(clustering[[conc1]], clustering[[conc2]])
+		clustering<-clustering[-c(conc1,conc2)]
+		clustering[[length(clustering)+1]]<-temp
+		cat("#clusters:", length(clustering), "\n")
+		print.partition(clustering)
+	}
+}
+```
+Seleção dos dados e chamada do hclust
+```{r}
+# read the dataset
+iris <- read.csv('../data/Iris.csv')
+
+# pegando somente as features do meu conjunto de dados, variável contínua
+iris.features <- iris[,4:5]
+
+#matriz de distancia
+iris.features.mat = dist(iris.features, method = 'euclidean')
+
+# obtem os centroides do meu cluster com o agrupamento kmeans
+h1 <- hclust(iris.features.mat)
+```
+PLotando o resultado do agrupamento
+```{r}
+plot(h1, cex=0.6, hang=0.1)
+```
+Podemos ver pela figura que as melhores escolhas para o número total de clusters são 3 ou 4.
+```{r}
+cluster.corte <- cutree(h1, 3)
+```
+Compararando com as espécies originais.
+```{r}
+table(cluster.corte, iris$Species)
+```
+O algoritmo classificou com sucesso todas as flores das espécies setosa no cluster 1 e virginica no cluster 2, mas teve problemas com o versicolor. Olhando a trama original mostrando as diferentes espécies, pode-se entender por que:
+```{r}
+library("ggplot2") 
+ggplot(iris, aes(iris$PetalLengthCm, iris$PetalWidthCm, color = iris$Species)) +
+  geom_point(alpha = 0.4, size = 3.5) + geom_point(col = cluster.corte) + 
+  scale_color_manual(values = c('black', 'red', 'green'))
+```
+
+

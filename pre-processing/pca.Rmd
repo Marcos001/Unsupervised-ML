@@ -1,0 +1,86 @@
+---
+title: "Pré-processamento"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+
+## Redução de Dimensionalidade
+Apresenta-se conceitos necessários para análise dos atributos em bases de dados e redução da dimensionalidade usando _Principal Component Analysis_ (PCA). 
+
+Muitas técnicas de Aprendizado de Máquina (AM) são utilizadas para atratar dados com um número elevado de atributos, por exemplo, em Imagens: pixels, em expressão gênica: gênes, Mineração de textos: palavras. Podemos trabalhar com os atributos mais relevantes que ofereçam ao modelo melhor distinção de padrões, fazendo a seleção e remoção de atributos irrelevantes. Podemos utiliza a abordagem embutida, fazendo a seleção integrada com o algoritmo de aprendizado(decision tree), pode-se utilizar a filtragem de um subconjunto de atributos sem levar em consideração o algoritmo de aprendizado, e também tem o wrapper, que para cada subconjunto de atributos, um algoritmo de aprendizado é consultado.
+
+###PCA
+Método que utiliza uma tranformação ortogonal para conveter um conjunto de observações correlacionadas em um conjunto de componentes principais(_observações linearmente não-correlacionadas_). Ela traz algumas aplicações, como redução de dimensionalidade, redução de redundância, filtragem de ruído, compressão de dados, preparação para utilização por outras técnicas, e identificação de relacionamento entre variáveis. Antes de aplicar PCA nos dados, é importante realizar uma normalização!
+
+### Aplicação do PCA no conjunto de dados Íris
+
+```{r}
+# lendo o datset por meio de um arquivo .csv
+iris = read.csv('../data/Iris.csv')
+
+# Os dados contêm quatro variáveis contínuas que correspondem às medidas físicas 
+# das flores e uma variável categórica que descreve as espécies de flores.
+head(iris)
+```
+Vamos aplicar o PCA às quatro variáveis contínuas e usar a variável categórica para visualizar os PCs posteriormente. Observe que, no código a seguir, aplicamos uma transformação de log às variáveis contínuas, conforme sugerido por [1], e definimos center e scale igual a TRUE na chamada para prcomp padronizar as variáveis antes da aplicação do PCA:
+```{r}
+# tranformação de log - normalização dos dados
+log.iris <- log(iris[,2:5]) 
+iris.species <- iris[,6]
+
+# aplica o PCA - scale = TRUE é aconselhavel
+# mas o padrão é false
+iris.pca <- prcomp(log.iris,
+                   center = TRUE, scale. = TRUE)
+```
+Como a assimetria e a magnitude das variáveis influenciam os PCs resultantes, é uma boa prática aplicar a transformação de assimetria, centralizar e dimensionar as variáveis antes da aplicação do PCA. No exemplo acima, aplicamos uma transformação de log às variáveis, mas poderíamos ter sido mais gerais e aplicado uma transformação Box e Cox [2].
+
+#Analizando os Resultados
+
+A função prcomp retorna um objeto de classe prcomp, que possui alguns métodos disponíveis. Com aplicação do método podemos o desvio padrão de cada um dos quatro PCs e sua rotação (ou loadings), que são os coeficientes das combinações lineares das variáveis contínuas.
+
+```{r}
+iris.pca
+```
+
+### Encontrando o cotovelo
+
+O método de plotagem retorna um gráfico das variâncias (eixo y) associadas aos PCs (eixo x). A figura abaixo é útil para decidir quantos PCs manter para análise posterior. Neste caso simples, com apenas 4 PCs, isso não é uma tarefa difícil e podemos ver que os dois primeiros PCs explicam a maior parte da variabilidade nos dados.
+```{r}
+# plot o método
+plot(iris.pca, type = 'l')
+```
+
+O método **summary** descreve a importância dos PCs. A primeira linha descreve novamente o desvio padrão associado a cada PC. A segunda linha mostra a proporção da variação nos dados explicados por cada componente, enquanto a terceira linha descreve a proporção cumulativa da variação explicada. Podemos ver que os dois primeiros PCs são responsáveis por mais do que pela variação dos dados.
+```{r}
+summary(iris.pca)
+```
+
+A Figura abaixo é um biplot gerado pelo gráfico **ggbiplot**.
+```{r ggbiplot}
+library(devtools)
+library(ggbiplot)
+
+g <- ggbiplot(iris.pca, obs.scale = 1, var.scale = 1,
+              groups = iris.species, ellipse = TRUE,
+              circle = TRUE)
+
+g <- g + scale_color_discrete(name='')
+
+g <- g + theme(legend.direction = 'horizontal',
+               legend.position = 'top')
+
+# print g
+g
+```
+
+Ele projeta os dados nos dois primeiros PCs. Outros PCs podem ser escolhidos através das escolhas de argumentos da função. Ele colore cada ponto de acordo com as espécies das flores e desenha uma linha de contorno normal com a probabilidade ellipse.prob (padrão) para cada grupo. Mais informações sobre o ggbiplot podem ser obtidas pelo ggbiplot usual. Eu acho que você vai concordar que a trama produzida pelo ggbiplot é muito melhor que a produzida pelo biplot (iris.pca), Figura abaixo. 
+
+```{r}
+biplot(iris.pca)
+```
+
+
